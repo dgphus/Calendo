@@ -15,7 +15,6 @@
     <Folder Include="Authentication\" />
     <Folder Include="Integration\" />
     <Folder Include="Service\" />
-    <Folder Include="Repository\" />
   </ItemGroup>
 
   <ItemGroup>

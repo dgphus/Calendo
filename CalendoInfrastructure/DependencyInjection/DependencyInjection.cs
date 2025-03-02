@@ -1,4 +1,7 @@
-﻿using CalendoInfrastructure.Data;
+﻿using CalendoApplication.Interface;
+using CalendoApplication.Mapper;
+using CalendoInfrastructure.Data;
+using CalendoInfrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +17,15 @@ namespace CalendoInfrastructure.DependencyInjection
     {
         public static IServiceCollection InfrastructureService(this IServiceCollection services, IConfiguration configuration)
         {
-            
+            services.AddDatabase(configuration);
+
+            services.AddRepositories();
+
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
+
             return services;
         }
 
@@ -24,6 +35,13 @@ namespace CalendoInfrastructure.DependencyInjection
                 options.UseSqlServer(configuration.GetConnectionString("Default"),
                 b => b.MigrationsAssembly(typeof(DependencyInjection).Assembly.FullName)),
                 ServiceLifetime.Scoped);
+        }
+
+        public static void AddRepositories(this IServiceCollection services)
+        {
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
         }
     }
 }
