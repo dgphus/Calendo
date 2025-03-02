@@ -1,3 +1,4 @@
+using CalendoAPI.Middleware;
 using CalendoInfrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+app.UseAuthentication();
+
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

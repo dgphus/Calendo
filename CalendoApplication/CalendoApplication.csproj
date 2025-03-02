@@ -11,10 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interface\" />
     <Folder Include="IService\" />
-    <Folder Include="Mapper\" />
-    <Folder Include="Utils\" />
     <Folder Include="ViewModels\Response\" />
     <Folder Include="ViewModels\Request\" />
   </ItemGroup>
