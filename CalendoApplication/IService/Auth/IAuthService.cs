@@ -11,5 +11,8 @@ namespace CalendoApplication.IService.Auth
     public interface IAuthService
     {
         Task<LoginResponse> Login(LoginRequest loginDTO);
+        Task<LoginResponse> RefreshToken(string refreshToken);
+        Task<bool> RegisterUser(RegisterRequest registerRequest);
+        Task<bool> ConfirmEmailAsync(string token, string email);
     }
 }

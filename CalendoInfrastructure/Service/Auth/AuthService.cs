@@ -23,15 +23,19 @@ namespace CalendoInfrastructure.Service.Auth
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly ISendMail _sendMail;
+        private readonly UserManager<User> _userManager;
 
         public AuthService(
             IAuthentication authentication, IUnitOfWork unitOfWork, IMapper mapper,
-            IConfiguration configuration)
+            IConfiguration configuration, ISendMail sendMail, UserManager<User> userManager)
         {
             _authentication = authentication;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _configuration = configuration;
+            _sendMail = sendMail;
+            _userManager = userManager;
         }
 
         public async Task<LoginResponse> Login(LoginRequest loginDTO)
@@ -83,6 +87,94 @@ namespace CalendoInfrastructure.Service.Auth
             await _authentication.SaveRefreshToken(user, refreshToken);
 
             return new LoginResponse { token = token, refreshToken = refreshToken };
+        }
+
+        public async Task<LoginResponse> RefreshToken(string refreshToken)
+        {
+            var users = await _unitOfWork.GetRepository<User>().Entities.ToListAsync();
+
+            User user = null;
+
+            foreach (var u in users)
+            {
+                var storedToken = await _userManager.GetAuthenticationTokenAsync(u, "FarmerOnline", "RefreshToken");
+                if (storedToken == refreshToken)
+                {
+                    user = u;
+                    break;
+                }
+            }
+
+            // Kiểm tra nếu không tìm thấy người dùng với refresh token hợp lệ
+            if (user == null)
+            {
+                throw new CustomException.ForbbidenException("Refresh token không hợp lệ.");
+            }
+
+            // Tạo JWT token mới
+            var newJwtToken = await _authentication.GenerateJWTToken(user);
+
+            // Tạo refresh token mới và lưu lại
+            var newRefreshToken = _authentication.GenerateRefreshToken();
+            await _authentication.SaveRefreshToken(user, newRefreshToken);
+
+            return new LoginResponse
+            {
+                token = newJwtToken,
+                refreshToken = newRefreshToken
+            };
+        }
+
+        public async Task<bool> RegisterUser(RegisterRequest registerRequest)
+        {
+            if (registerRequest.Password != registerRequest.ConfirmPassword)
+            {
+                throw new CustomException.InvalidDataException("Password và ConfirmPassword không trùng khớp.");
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(registerRequest.Email);
+            if (existingUser != null)
+            {
+                throw new CustomException.InvalidDataException("Email đã tồn tại trong hệ thống.");
+            }
+
+            var user = _mapper.Map<User>(registerRequest);
+            user.Email = user.UserName = registerRequest.Email;
+            user.Avatar = "https://firebasestorage.googleapis.com/v0/b/nongdanonline-458d0.appspot.com/o/LandingPage%2Ffarmer.png?alt=media&token=027e1e3c-c0d7-48db-aa91-edca13609ad3";
+            user.EmailConfirmed = false;
+
+            var result = await _userManager.CreateAsync(user, registerRequest.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new CustomException.InvalidDataException($"Đăng ký thất bại: {errors}");
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+            if (!roleResult.Succeeded)
+            {
+                throw new CustomException.InvalidDataException("Gán vai trò thất bại.");
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationUrlTemplate = _configuration["Mail:ConfirmationUrl"];
+            var callbackUrl = string.Format(confirmationUrlTemplate, token, registerRequest.Email);
+            await _sendMail.SendConfirmationEmailAsync(registerRequest.Email, callbackUrl);
+
+            return true;
+        }
+
+        public async Task<bool> ConfirmEmailAsync(string token, string email)
+        {
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(email))
+                throw new CustomException.InvalidDataException("Invalid email confirmation request.");
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                throw new CustomException.InvalidDataException($"Không tìm thấy người dùng với email {email}.");
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            return result.Succeeded;
         }
     }
 }
