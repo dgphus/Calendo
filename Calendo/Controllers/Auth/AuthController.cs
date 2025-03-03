@@ -49,5 +49,21 @@ namespace CalendoAPI.Controllers.Auth
             return CustomResult("Xác nhận email thành công.", isConfirmed);
 
         }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+
+            await _authService.ForgotPasswordAsync(request.Email);
+            return CustomResult("Email khôi phục mật khẩu đã được gửi.");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+
+            await _authService.ResetPasswordAsync(request);
+            return CustomResult("Đặt lại mật khẩu thành công.");
+
+        }
     }
 }

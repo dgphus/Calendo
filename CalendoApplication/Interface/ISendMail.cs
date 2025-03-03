@@ -11,5 +11,7 @@ namespace CalendoApplication.Interface
         Task SendEmailAsync(string toEmail, string subject, string message);
 
         Task SendConfirmationEmailAsync(string email, string callbackUrl);
+
+        Task SendForgotPasswordEmailAsync(string email, string callbackUrl);
     }
 }

@@ -119,5 +119,24 @@ namespace CalendoInfrastructure.Integration.Mail
 
             return BuildEmailTemplate("Xác nhận tài khoản", bodyContent);
         }
+
+        public string BuildForgotPasswordEmailBody(string email, string callbackUrl)
+        {
+            var bodyContent = $@"
+                <h2>Xin chào {email},</h2>
+                <p>
+                    Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Calendo.
+                </p>
+                <p>
+                    Vui lòng nhấn vào nút bên dưới để đặt lại mật khẩu của bạn:
+                </p>
+                <div class='button'>
+                    <a href='{callbackUrl}'>Đặt lại mật khẩu</a>
+                </div>
+                <p>Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng bỏ qua email này.</p>
+            ";
+
+            return BuildEmailTemplate("Đặt lại mật khẩu", bodyContent);
+        }
     }
 }

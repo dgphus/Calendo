@@ -10,5 +10,6 @@ namespace CalendoApplication.Interface
     {
         string BuildEmailTemplate(string title, string bodyContent);
         string BuildConfirmationEmailBody(string email, string callbackUrl);
+        string BuildForgotPasswordEmailBody(string email, string callbackUrl);
     }
 }

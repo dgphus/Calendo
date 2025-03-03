@@ -52,5 +52,12 @@ namespace CalendoInfrastructure.Integration.Mail
             await SendEmailAsync(email, "Xác nhận tài khoản", emailBody);
         }
 
+        public async Task SendForgotPasswordEmailAsync(string email, string callbackUrl)
+        {
+            var emailTemplateBuilder = new EmailTemplateBuilder();
+            var emailBody = emailTemplateBuilder.BuildForgotPasswordEmailBody(email, callbackUrl);
+
+            await SendEmailAsync(email, "Đặt lại mật khẩu", emailBody);
+        }
     }
 }
