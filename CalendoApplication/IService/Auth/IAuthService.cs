@@ -14,5 +14,7 @@ namespace CalendoApplication.IService.Auth
         Task<LoginResponse> RefreshToken(string refreshToken);
         Task<bool> RegisterUser(RegisterRequest registerRequest);
         Task<bool> ConfirmEmailAsync(string token, string email);
+        Task<bool> ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

@@ -140,7 +140,7 @@ namespace CalendoInfrastructure.Service.Auth
 
             var user = _mapper.Map<User>(registerRequest);
             user.Email = user.UserName = registerRequest.Email;
-            user.Avatar = "https://firebasestorage.googleapis.com/v0/b/nongdanonline-458d0.appspot.com/o/LandingPage%2Ffarmer.png?alt=media&token=027e1e3c-c0d7-48db-aa91-edca13609ad3";
+            user.Avatar = "https://lanit.com.vn/wp-content/uploads/2023/11/c-sharp-la-gi-10.png";
             user.EmailConfirmed = false;
 
             var result = await _userManager.CreateAsync(user, registerRequest.Password);
@@ -174,6 +174,34 @@ namespace CalendoInfrastructure.Service.Auth
                 throw new CustomException.InvalidDataException($"Không tìm thấy người dùng với email {email}.");
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
+            return result.Succeeded;
+        }
+
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return false;
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetUrlTemplate = _configuration["Mail:PasswordResetUrl"];
+            var callbackUrl = string.Format(resetUrlTemplate, token, email);
+
+            await _sendMail.SendForgotPasswordEmailAsync(email, callbackUrl);
+
+            return true;
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmPassword)
+            {
+                throw new CustomException.InvalidDataException("Mật khẩu mới và xác nhận mật khẩu không giống nhau.");
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null) return false;
+
+            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
             return result.Succeeded;
         }
     }
