@@ -4,6 +4,7 @@ using CalendoApplication.Mapper;
 using CalendoDomain.Entity;
 using CalendoInfrastructure.Authentication;
 using CalendoInfrastructure.Data;
+using CalendoInfrastructure.Integration.Mail;
 using CalendoInfrastructure.Repository;
 using CalendoInfrastructure.Service.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,6 +32,8 @@ namespace CalendoInfrastructure.DependencyInjection
             services.AddServices();
 
             services.AddAuthentication(configuration);
+
+            services.AddExternalServices();
 
             services.AddAutoMapper(cfg =>
             {
@@ -132,6 +135,13 @@ namespace CalendoInfrastructure.DependencyInjection
         public static void AddServices(this IServiceCollection services)
         {
             services.AddScoped<IAuthService, AuthService>();
+        }
+
+        public static void AddExternalServices(this IServiceCollection services)
+        {
+            services.AddScoped<ISendMail, SendMail>();
+
+            services.AddScoped<IEmailTemplateBuilder, EmailTemplateBuilder>();
         }
     }
 }
